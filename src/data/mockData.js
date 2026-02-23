@@ -1,0 +1,238 @@
+export const offers = [
+  {
+    id: '1',
+    title: 'Hotel Paraíso Azul',
+    category: 'Hospedaje',
+    location: 'Miramar de Ansenuza, Córdoba',
+    rating: 4.8,
+    reviewCount: 96,
+    price: 120,
+    priceSuffix: '/noche',
+    priceLabel: 'Desde',
+    image: 'https://picsum.photos/seed/hotel1/800/500',
+    isFavorite: true,
+    badge: 'Más Popular',
+    discount: null,
+    description:
+      'Ubicado a metros del lago más grande de Argentina, este hotel boutique ofrece vistas incomparables al Mar de Ansenuza. Disfruta de su piscina al aire libre, restaurante gourmet y actividades de avistamiento de flamencos rosados. Incluye desayuno y traslados desde el aeropuerto.',
+    phone: '+54 9 3562 400-000',
+    reviews: [
+      {
+        id: 'r1',
+        name: 'Carla Méndez',
+        rating: 5,
+        comment:
+          'Fue una experiencia increíble. El hotel tenía las mejores vistas del lago y la organización fue impecable. ¡Altamente recomendado!',
+        time: 'Hace 2 días',
+        avatar: 'https://picsum.photos/seed/avatar1/80/80',
+      },
+      {
+        id: 'r2',
+        name: 'Marcos Ruiz',
+        rating: 4,
+        comment:
+          'Excelente servicio y ubicación privilegiada. Los flamencos al amanecer son un espectáculo único.',
+        time: 'Hace 1 semana',
+        avatar: 'https://picsum.photos/seed/avatar2/80/80',
+      },
+    ],
+  },
+  {
+    id: '2',
+    title: 'Cabañas del Bosque',
+    category: 'Hospedaje',
+    location: 'Mar Chiquita, Córdoba',
+    rating: 4.5,
+    reviewCount: 43,
+    price: 85,
+    priceSuffix: '/noche',
+    priceLabel: 'Desde',
+    image: 'https://picsum.photos/seed/cabin1/800/500',
+    isFavorite: false,
+    badge: null,
+    discount: null,
+    description:
+      'Cabañas de madera rodeadas de naturaleza, a pocos kilómetros de la orilla del lago. Ideal para familias y parejas que buscan desconectarse. Incluye desayuno y acceso a kayaks.',
+    phone: '+54 9 3562 450-111',
+    reviews: [
+      {
+        id: 'r1',
+        name: 'Sofía García',
+        rating: 5,
+        comment:
+          'Un lugar mágico para desconectarse. Las cabañas son cómodas y el paisaje es espectacular.',
+        time: 'Hace 3 días',
+        avatar: 'https://picsum.photos/seed/avatar3/80/80',
+      },
+    ],
+  },
+  {
+    id: '3',
+    title: 'Tour Flamencos Ansenuza',
+    category: 'Servicio',
+    location: 'Miramar de Ansenuza, Córdoba',
+    rating: 4.9,
+    reviewCount: 128,
+    price: 45,
+    priceSuffix: '/persona',
+    priceLabel: 'Precio Fijo',
+    image: 'https://picsum.photos/seed/flamingo1/800/500',
+    isFavorite: false,
+    badge: 'Más Popular',
+    discount: { percent: 15, originalPrice: 53, validUntil: '30 de Oct' },
+    description:
+      'Descubrí las colonias de flamencos rosados del Mar de Ansenuza con nuestro guía local certificado. El tour incluye traslado desde el centro, binoculares y guía especializado. Una experiencia única e irrepetible en el quinto lago salino más grande del mundo.',
+    phone: '+54 9 3562 500-222',
+    reviews: [
+      {
+        id: 'r1',
+        name: 'Luciana Torres',
+        rating: 5,
+        comment:
+          'Ver los flamencos al atardecer fue algo que jamás voy a olvidar. El guía fue excelente.',
+        time: 'Hace 1 día',
+        avatar: 'https://picsum.photos/seed/avatar4/80/80',
+      },
+    ],
+  },
+  {
+    id: '4',
+    title: 'Restaurante El Biguá',
+    category: 'Negocio',
+    location: 'Miramar de Ansenuza, Córdoba',
+    rating: 4.7,
+    reviewCount: 75,
+    price: 30,
+    priceSuffix: '/persona',
+    priceLabel: 'Desde',
+    image: 'https://picsum.photos/seed/restaurant1/800/500',
+    isFavorite: false,
+    badge: null,
+    discount: null,
+    description:
+      'Gastronomía regional con vista al lago. Especialidad en pejerrey y otras especies de agua dulce. Ambiente familiar con capacidad para eventos privados.',
+    phone: '+54 9 3562 520-333',
+    reviews: [
+      {
+        id: 'r1',
+        name: 'Roberto Leal',
+        rating: 5,
+        comment:
+          'El pejerrey a la parrilla con vista al lago fue simplemente perfecto. ¡Volveremos!',
+        time: 'Hace 4 días',
+        avatar: 'https://picsum.photos/seed/avatar5/80/80',
+      },
+    ],
+  },
+  {
+    id: '5',
+    title: 'Escapada Romántica Ansenuza',
+    category: 'Hospedaje',
+    location: 'Mar Chiquita, Córdoba',
+    rating: 4.8,
+    reviewCount: 61,
+    price: 350,
+    priceSuffix: '/persona',
+    priceLabel: 'Desde',
+    image: 'https://picsum.photos/seed/romantic1/800/500',
+    isFavorite: true,
+    badge: null,
+    discount: { percent: 20, originalPrice: 437, validUntil: '15 de Nov' },
+    description:
+      'Paquete especial de 3 noches para parejas. Incluye cabaña privada con jacuzzi, cena romántica frente al lago, paseo en lancha al atardecer y kit de bienvenida con vinos de la región.',
+    phone: '+54 9 3562 480-444',
+    reviews: [
+      {
+        id: 'r1',
+        name: 'Ana y Pedro',
+        rating: 5,
+        comment:
+          'La mejor escapada para nuestro aniversario. Todo fue perfecto desde el primer minuto.',
+        time: 'Hace 5 días',
+        avatar: 'https://picsum.photos/seed/avatar6/80/80',
+      },
+    ],
+  },
+];
+
+export const providerListings = [
+  {
+    id: '1',
+    title: 'Tour Flamencos Ansenuza',
+    location: 'Miramar de Ansenuza, Córdoba',
+    price: 45,
+    status: 'active',
+    image: 'https://picsum.photos/seed/flamingo1/200/200',
+  },
+  {
+    id: '2',
+    title: 'Cabañas Orilla del Lago',
+    location: 'Mar Chiquita, Córdoba',
+    price: 85,
+    status: 'pending',
+    image: 'https://picsum.photos/seed/cabin2/200/200',
+  },
+  {
+    id: '3',
+    title: 'Kayak en Ansenuza',
+    location: 'Miramar, Córdoba',
+    price: 30,
+    status: 'active',
+    image: 'https://picsum.photos/seed/kayak1/200/200',
+  },
+];
+
+export const providerStats = {
+  totalViews: 12450,
+  viewsTrend: '+12%',
+  viewsTrendUp: true,
+  confirmedBookings: 342,
+  bookingsTrend: '-5%',
+  bookingsTrendUp: false,
+  revenue: 45200,
+  revenueTrend: '+18%',
+  revenueTrendUp: true,
+  weeklyData: [
+    { day: 'Lun', views: 75, bookings: 25 },
+    { day: 'Mar', views: 87, bookings: 37 },
+    { day: 'Mié', views: 100, bookings: 50 },
+    { day: 'Jue', views: 62, bookings: 19 },
+    { day: 'Vie', views: 93, bookings: 62 },
+    { day: 'Sáb', views: 112, bookings: 75 },
+    { day: 'Dom', views: 75, bookings: 31 },
+  ],
+  topPublications: [
+    {
+      id: '1',
+      title: 'Tour Flamencos Ansenuza',
+      views: '1.2k',
+      bookings: 45,
+      revenue: '$12.5k',
+      image: 'https://picsum.photos/seed/flamingo1/100/100',
+    },
+    {
+      id: '2',
+      title: 'Pack Spa & Relax Fin de Semana',
+      views: '890',
+      bookings: 32,
+      revenue: '$8.2k',
+      image: 'https://picsum.photos/seed/spa1/100/100',
+    },
+    {
+      id: '3',
+      title: 'Villa Paraíso Familiar',
+      views: '2.1k',
+      bookings: 68,
+      revenue: '$22.4k',
+      image: 'https://picsum.photos/seed/villa1/100/100',
+    },
+  ],
+};
+
+export const MOCK_USER = {
+  name: 'Luciano Proveedor',
+  email: 'proveedor@ansenuza.com',
+  password: '123456',
+  avatar: 'https://picsum.photos/seed/user1/100/100',
+  company: 'Turismo Ansenuza',
+};

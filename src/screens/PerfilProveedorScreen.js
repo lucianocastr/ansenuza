@@ -1,0 +1,142 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
+import colors from '../theme/colors';
+import { MOCK_USER } from '../data/mockData';
+
+export default function PerfilProveedorScreen({ navigation }) {
+  const handleLogout = () => {
+    Alert.alert(
+      'Cerrar sesión',
+      '¿Estás seguro que querés salir del portal de proveedor?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Salir',
+          style: 'destructive',
+          onPress: () => navigation.navigate('Bienvenida'),
+        },
+      ]
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Mi Perfil</Text>
+      </View>
+
+      {/* Avatar y datos */}
+      <View style={styles.profileSection}>
+        <View style={styles.avatarContainer}>
+          <Image source={{ uri: MOCK_USER.avatar }} style={styles.avatar} />
+        </View>
+        <Text style={styles.name}>{MOCK_USER.name}</Text>
+        <Text style={styles.company}>{MOCK_USER.company}</Text>
+        <Text style={styles.email}>{MOCK_USER.email}</Text>
+
+        {/* Badge proveedor */}
+        <View style={styles.badge}>
+          <MaterialIcons name="verified" size={14} color={colors.primary} />
+          <Text style={styles.badgeText}>Proveedor Verificado</Text>
+        </View>
+      </View>
+
+      {/* Menú */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>CONFIGURACIÓN</Text>
+        {[
+          { icon: 'edit', label: 'Editar perfil' },
+          { icon: 'notifications-none', label: 'Notificaciones' },
+          { icon: 'lock-outline', label: 'Seguridad' },
+          { icon: 'help-outline', label: 'Ayuda y soporte' },
+        ].map((item) => (
+          <TouchableOpacity key={item.label} style={styles.menuItem}>
+            <MaterialIcons name={item.icon} size={22} color={colors.primary} />
+            <Text style={styles.menuLabel}>{item.label}</Text>
+            <MaterialIcons name="chevron-right" size={20} color={colors.textMuted} />
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Botón logout */}
+      <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+        <MaterialIcons name="logout" size={20} color={colors.error} />
+        <Text style={styles.logoutText}>Cerrar Sesión</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
+  title: { fontSize: 22, fontWeight: '800', color: colors.text },
+  profileSection: { alignItems: 'center', paddingVertical: 24, gap: 4 },
+  avatarContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 3,
+    borderColor: colors.primary,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  avatar: { width: '100%', height: '100%' },
+  name: { fontSize: 18, fontWeight: '700', color: colors.text },
+  company: { fontSize: 13, fontWeight: '600', color: colors.primary },
+  email: { fontSize: 12, color: colors.textSecondary },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.primaryLight,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
+    marginTop: 8,
+  },
+  badgeText: { fontSize: 12, fontWeight: '600', color: colors.primary },
+  section: { paddingHorizontal: 20, marginBottom: 20 },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textMuted,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  menuLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.text },
+  logoutBtn: {
+    marginHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+  },
+  logoutText: { fontSize: 15, fontWeight: '700', color: colors.error },
+});
