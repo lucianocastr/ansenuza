@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../theme/colors';
-import { MOCK_USER } from '../data/mockData';
+import { supabase } from '../lib/supabase';
 
 export default function LoginProveedorScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -22,25 +22,21 @@ export default function LoginProveedorScreen({ navigation }) {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Campos requeridos', 'Por favor completá el email y la contraseña.');
       return;
     }
 
     setLoading(true);
-    // Simulación de login (500ms)
-    setTimeout(() => {
-      setLoading(false);
-      if (email === MOCK_USER.email && password === MOCK_USER.password) {
-        navigation.reset({ index: 0, routes: [{ name: 'ProviderArea' }] });
-      } else {
-        Alert.alert(
-          'Credenciales incorrectas',
-          'Email o contraseña incorrectos.\n\nHint: usa proveedor@ansenuza.com / 123456'
-        );
-      }
-    }, 500);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+
+    if (error) {
+      Alert.alert('Error al ingresar', error.message);
+    }
+    // Si el login es exitoso, AuthContext detecta el cambio y AppNavigator
+    // redirige automáticamente a ProviderArea — no hace falta navigation.reset()
   };
 
   return (

@@ -13,11 +13,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../theme/colors';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const CATEGORIES = ['Hospedaje', 'Negocio', 'Servicio'];
 const FRECUENCIAS = ['Por noche', 'Por persona', 'Total paquete'];
 
-export default function NuevaPublicacionScreen({ navigation }) {
+export default function NuevaPublicacionScreen({ navigation, route }) {
+  const { user } = useAuth();
   const [category, setCategory] = useState('Hospedaje');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -25,17 +28,43 @@ export default function NuevaPublicacionScreen({ navigation }) {
   const [frequency, setFrequency] = useState('Por noche');
   const [address, setAddress] = useState('');
   const [freqOpen, setFreqOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handlePublicar = () => {
+  const handlePublicar = async () => {
     if (!title.trim() || !price.trim()) {
       Alert.alert('Campos requeridos', 'Completá al menos el título y el precio.');
       return;
     }
-    Alert.alert(
-      '¡Publicación creada!',
-      `Tu oferta "${title}" fue enviada para revisión. Estará activa en las próximas 24 hs.`,
-      [{ text: 'Volver', onPress: () => navigation.goBack() }]
-    );
+
+    setSaving(true);
+    const { error } = await supabase.from('listings').insert({
+      user_id: user.id,
+      title: title.trim(),
+      description: description.trim(),
+      category,
+      price: parseFloat(price),
+      price_suffix: frequency === 'Por noche' ? '/noche' : frequency === 'Por persona' ? '/persona' : '/paquete',
+      location: address.trim() || 'Miramar de Ansenuza, Córdoba',
+      status: 'pending',
+      image: `https://picsum.photos/seed/${Date.now()}/200/200`,
+    });
+    setSaving(false);
+
+    if (error) {
+      Alert.alert('Error', 'No se pudo crear la publicación. Intentá de nuevo.');
+    } else {
+      Alert.alert(
+        '¡Publicación creada!',
+        `Tu oferta "${title}" fue enviada para revisión. Estará activa en las próximas 24 hs.`,
+        [{
+          text: 'Volver',
+          onPress: () => {
+            route.params?.onSuccess?.();
+            navigation.goBack();
+          },
+        }]
+      );
+    }
   };
 
   return (
@@ -194,9 +223,14 @@ export default function NuevaPublicacionScreen({ navigation }) {
 
           {/* Acciones */}
           <View style={styles.actionsSection}>
-            <TouchableOpacity style={styles.publishBtn} onPress={handlePublicar} activeOpacity={0.88}>
+            <TouchableOpacity
+              style={[styles.publishBtn, saving && { opacity: 0.7 }]}
+              onPress={handlePublicar}
+              activeOpacity={0.88}
+              disabled={saving}
+            >
               <MaterialIcons name="publish" size={20} color="white" />
-              <Text style={styles.publishBtnText}>Publicar</Text>
+              <Text style={styles.publishBtnText}>{saving ? 'Publicando...' : 'Publicar'}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>
               <Text style={styles.cancelBtnText}>Cancelar</Text>

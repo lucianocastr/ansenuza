@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,20 +6,22 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../theme/colors';
-import { providerListings } from '../data/mockData';
+import { useListings } from '../hooks/useListings';
 import ListingItem from '../components/ListingItem';
 
-const stats = [
-  { label: 'Activas', value: '3', color: colors.primary },
-  { label: 'Pendientes', value: '1', color: colors.warning },
-  { label: 'Pausadas', value: '0', color: colors.textMuted },
-];
-
 export default function MisPublicacionesScreen({ navigation }) {
+  const { listings, loading, refresh } = useListings();
+
+  const stats = useMemo(() => [
+    { label: 'Activas', value: String(listings.filter(l => l.status === 'active').length), color: colors.primary },
+    { label: 'Pendientes', value: String(listings.filter(l => l.status === 'pending').length), color: colors.warning },
+    { label: 'Pausadas', value: String(listings.filter(l => l.status === 'paused').length), color: colors.textMuted },
+  ], [listings]);
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -60,23 +62,27 @@ export default function MisPublicacionesScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={providerListings}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ListingItem
-            item={item}
-            onStats={() => navigation.navigate('Estadísticas')}
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+      ) : (
+        <FlatList
+          data={listings}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <ListingItem
+              item={item}
+              onStats={() => navigation.navigate('Estadísticas')}
+            />
+          )}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
       {/* FAB */}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('NuevaPublicacion')}
+        onPress={() => navigation.navigate('NuevaPublicacion', { onSuccess: refresh })}
         activeOpacity={0.88}
       >
         <MaterialIcons name="add-circle-outline" size={22} color="white" />

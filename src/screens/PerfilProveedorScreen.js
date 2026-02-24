@@ -10,9 +10,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../theme/colors';
-import { MOCK_USER } from '../data/mockData';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
-export default function PerfilProveedorScreen({ navigation }) {
+export default function PerfilProveedorScreen() {
+  const { user } = useAuth();
+
   const handleLogout = () => {
     Alert.alert(
       'Cerrar sesión',
@@ -22,7 +25,8 @@ export default function PerfilProveedorScreen({ navigation }) {
         {
           text: 'Salir',
           style: 'destructive',
-          onPress: () => navigation.navigate('Bienvenida'),
+          onPress: () => supabase.auth.signOut(),
+          // AuthContext detecta signOut y AppNavigator redirige automáticamente
         },
       ]
     );
@@ -37,11 +41,11 @@ export default function PerfilProveedorScreen({ navigation }) {
       {/* Avatar y datos */}
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
-          <Image source={{ uri: MOCK_USER.avatar }} style={styles.avatar} />
+          <Image source={{ uri: `https://picsum.photos/seed/${user?.id}/100/100` }} style={styles.avatar} />
         </View>
-        <Text style={styles.name}>{MOCK_USER.name}</Text>
-        <Text style={styles.company}>{MOCK_USER.company}</Text>
-        <Text style={styles.email}>{MOCK_USER.email}</Text>
+        <Text style={styles.name}>{user?.user_metadata?.name ?? 'Proveedor'}</Text>
+        <Text style={styles.company}>{user?.user_metadata?.company ?? 'Turismo Ansenuza'}</Text>
+        <Text style={styles.email}>{user?.email}</Text>
 
         {/* Badge proveedor */}
         <View style={styles.badge}>

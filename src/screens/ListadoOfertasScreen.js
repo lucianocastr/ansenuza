@@ -7,11 +7,12 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../theme/colors';
-import { offers } from '../data/mockData';
+import { useOffers } from '../hooks/useOffers';
 import OfertaCard from '../components/OfertaCard';
 
 const CATEGORIES = ['Todos', 'Hospedaje', 'Negocio', 'Servicio'];
@@ -25,6 +26,7 @@ const FILTER_CHIPS = [
 ];
 
 export default function ListadoOfertasScreen({ navigation }) {
+  const { offers, loading } = useOffers();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('Todos');
 
@@ -116,6 +118,9 @@ export default function ListadoOfertasScreen({ navigation }) {
       </View>
 
       {/* Lista de ofertas */}
+      {loading && (
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+      )}
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
