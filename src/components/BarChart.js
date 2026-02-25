@@ -5,7 +5,9 @@ import colors from '../theme/colors';
 const CHART_HEIGHT = 140;
 
 export default function BarChart({ data }) {
-  const maxViews = Math.max(...data.map((d) => d.views));
+  if (!data || data.length === 0 || data[0].views === undefined) return null;
+  const maxViews = Math.max(...data.map((d) => d.views || 0));
+  if (maxViews === 0) return null;
 
   return (
     <View style={styles.container}>

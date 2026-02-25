@@ -1,7 +1,7 @@
 # Miramar de Ansenuza — Documentación Completa del Proyecto
 
 > **MVP React Native + Expo** · JavaScript · React Navigation v6 · Supabase
-> Última actualización: Feb 2026 · Estado: v2.0 — Auth real + datos en vivo desde Supabase
+> Última actualización: Feb 2026 · Estado: v3.1 — QA Pass completo: 29 bugs corregidos, EAS publicado en branch preview
 
 ---
 
@@ -139,14 +139,14 @@ NavigationContainer
 
 ```json
 {
-  "expo": "~52.0.18",                          // Runtime y toolchain
+  "expo": "^54.0.33",                          // Runtime y toolchain
   "@react-navigation/native": "^6.1.18",       // Core de navegación
   "@react-navigation/stack": "^6.4.1",         // Navigator tipo Stack
   "@react-navigation/bottom-tabs": "^6.6.1",   // Navigator tipo Bottom Tabs
-  "react-native-screens": "~4.1.0",            // Optimización de screens nativas
-  "react-native-safe-area-context": "4.12.0",  // Manejo de notch / home indicator
-  "react-native-gesture-handler": "~2.20.2",   // Requerido por Stack Navigator
-  "@expo/vector-icons": "^14.0.4",             // MaterialIcons (incluido en Expo)
+  "react-native-screens": "~4.16.0",           // Optimización de screens nativas
+  "react-native-safe-area-context": "~5.6.0",  // Manejo de notch / home indicator
+  "react-native-gesture-handler": "~2.28.0",   // Requerido por Stack Navigator
+  "@expo/vector-icons": "^15.0.3",             // MaterialIcons (incluido en Expo)
   "expo-status-bar": "~2.0.0"                  // Control de la barra de estado
 }
 ```
@@ -200,8 +200,11 @@ AnsenuZaApp/
         │                           # Props: label, value, icon, trend, trendUp
         ├── ListingItem.js          # Item de publicación con estado (active/pending/paused).
         │                           # Props: item (objeto), onStats (función)
-        └── BarChart.js             # Gráfico de barras 100% con View nativas.
-                                    # Props: data (array {day, views, bookings})
+        ├── BarChart.js             # Gráfico de barras 100% con View nativas.
+        │                           # Props: data (array {day, views, bookings})
+        │                           # Guard: retorna null si data vacío o sin estructura {views}
+        └── SkeletonCard.js         # Placeholder animado (pulse) para estados de carga.
+                                    # Sin props. Usado en MisPublicacionesScreen mientras loading=true
 ```
 
 ---
@@ -314,6 +317,11 @@ AnsenuZaApp/
 | `error` | `#ef4444` | Textos de error, botón logout |
 | `trendUp` | `#16a34a` | Tendencia positiva en estadísticas |
 | `trendDown` | `#dc2626` | Tendencia negativa en estadísticas |
+| `successLight` | `#d1fae5` | Fondo de badge "Confirmada" en Reservas |
+| `warningLight` | `#fef3c7` | Fondo de badge "Pendiente" en Reservas |
+| `errorLight` | `#fee2e2` | Fondo de badge "Cancelada" en Reservas |
+| `categoryService` | `#f97316` | Badge categoría "Servicio" en OfertaCard |
+| `categoryBusiness` | `#0ea5e9` | Badge categoría "Negocio" en OfertaCard |
 
 ### Tipografía
 - Sin fuente custom instalada. Usa la fuente nativa del sistema (SF Pro en iOS, Roboto en Android).
@@ -391,9 +399,9 @@ AnsenuZaApp/
 ### Versiones exactas del proyecto
 
 ```
-expo:                 52.0.18
-react:                18.3.1
-react-native:         0.76.5
+expo:                 54.0.33
+react:                19.1.0
+react-native:         0.81.5
 @react-navigation/*:  6.x
 node (recomendado):   20.x LTS
 ```
@@ -466,7 +474,7 @@ Deberías ver un QR y el menú de Expo en la terminal sin errores. Si aparece er
 
 ## 9b. Configuración de Supabase
 
-Esta sección es **obligatoria** para que la app funcione en v2.0. Sin este paso, el login, el listado de ofertas y las publicaciones del proveedor no tendrán datos.
+Esta sección es **obligatoria** para que la app funcione. Sin este paso, el login, el listado de ofertas y las publicaciones del proveedor no tendrán datos.
 
 ### Paso 1 — Crear proyecto en Supabase
 
@@ -517,21 +525,21 @@ alter table offers enable row level security;
 create policy "Ofertas públicas" on offers for select using (true);
 
 -- Tabla de publicaciones del proveedor (protegida por RLS)
-create table listings (
+-- IMPORTANTE: el nombre es provider_listings, no listings
+create table provider_listings (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   title text not null,
-  category text not null check (category in ('Hospedaje','Negocio','Servicio')),
   location text not null,
-  description text,
   price numeric(10,2) not null,
-  price_suffix text default '/noche',
   status text default 'pending' check (status in ('active','pending','paused')),
   image text,
   created_at timestamptz default now()
 );
-alter table listings enable row level security;
-create policy "Listings propios" on listings for all using (auth.uid() = user_id);
+alter table provider_listings enable row level security;
+create policy "select_own" on provider_listings for select using (auth.uid() = user_id);
+create policy "insert_own" on provider_listings for insert with check (auth.uid() = user_id);
+create policy "update_own" on provider_listings for update using (auth.uid() = user_id);
 ```
 
 ### Paso 4 — Insertar datos de ejemplo (seed)
@@ -559,8 +567,8 @@ En el dashboard: **Authentication → Users → Add user**
 |---|---|
 | `src/lib/supabase.js` | Cliente Supabase + AsyncStorage para sesión persistente |
 | `src/context/AuthContext.js` | Estado de auth global, `useAuth()` hook |
-| `src/hooks/useOffers.js` | Fetch `offers` table → `{ offers, loading, error }` |
-| `src/hooks/useListings.js` | Fetch `listings` del usuario → `{ listings, loading, error, refresh }` |
+| `src/hooks/useOffers.js` | Fetch tabla `offers` → `{ offers, loading, error }`. Fallback a mockData si tabla vacía o error. |
+| `src/hooks/useListings.js` | Fetch tabla `provider_listings` del usuario → `{ listings, loading, error, refresh }` |
 
 ---
 
@@ -794,31 +802,39 @@ npx expo start
 
 Estas funcionalidades están **fuera del alcance del MVP** pero son el siguiente paso natural:
 
-### Iteración 2 — Backend y autenticación real
-- [ ] Integrar Supabase o Firebase como backend
-- [ ] Autenticación con JWT (email/password y Google OAuth)
-- [ ] Datos reales desde API REST o GraphQL
-- [ ] AsyncStorage para persistir sesión
+### Iteración 2 — Backend y autenticación real ✅ completada en v2.0/v3.0
+- [x] Integrar Supabase como backend
+- [x] Autenticación con email/password (Supabase Auth)
+- [x] Datos reales desde Supabase
+- [x] AsyncStorage para persistir sesión
 
-### Iteración 3 — Funcionalidades de turista
-- [ ] Pantalla de Reservas real (listado + estados)
-- [ ] Sistema de Favoritos persistido en base de datos
+### Iteración 3 — Funcionalidades de turista (parcial)
+- [x] Pantalla de Reservas con filtros y cancelación (mock)
+- [x] Sistema de Favoritos persistido en AsyncStorage
+- [ ] Favoritos en base de datos (tabla `user_favorites`)
+- [ ] Reservas reales en Supabase
 - [ ] Notificaciones push (Expo Notifications)
 - [ ] Búsqueda con geolocalización (Expo Location)
 
-### Iteración 4 — Funcionalidades de proveedor
-- [ ] Editor de publicaciones existentes
+### Iteración 4 — Funcionalidades de proveedor (parcial)
+- [x] Editor de publicaciones con UPDATE a Supabase
+- [x] Toggle activo/pausado de publicaciones
+- [x] Mensajería UI (estado local, sin backend)
+- [ ] Panel de aprobación de publicaciones pendientes
+- [ ] Auto-registro de proveedores con flujo de aprobación
 - [ ] Galería de fotos funcional (Expo ImagePicker)
-- [ ] Selector de fechas (DateTimePicker)
+- [ ] Selector de fechas real (DateTimePicker)
 - [ ] Mapa interactivo (react-native-maps)
-- [ ] Mensajería en tiempo real (WebSockets)
-- [ ] Estadísticas con datos reales
+- [ ] Mensajería en tiempo real (Supabase Realtime)
+- [ ] Estadísticas con datos reales de Supabase
 
 ### Iteración 5 — Calidad y producción
+- [ ] Publicar en Google Play Store (cuenta desarrollador USD 25)
+- [ ] Publicar en Apple App Store (Apple Developer Program USD 99/año)
+- [ ] Política de privacidad (obligatoria para stores)
+- [ ] Ícono y splash screen definitivos (1024x1024 PNG)
 - [ ] Tipado con TypeScript
 - [ ] Tests unitarios (Jest) y E2E (Detox)
-- [ ] Internacionalización (i18n)
-- [ ] Modo oscuro completo
 - [ ] Fuente custom Plus Jakarta Sans (expo-google-fonts)
 - [ ] CI/CD con GitHub Actions + EAS
 
@@ -842,6 +858,109 @@ Estas funcionalidades están **fuera del alcance del MVP** pero son el siguiente
 ---
 
 ## 17. Historial de cambios
+
+### v3.1 — Feb 2026 (QA pass completo)
+
+Corrección de 29 findings detectados en análisis exhaustivo QA/UI/UX. Tres fases:
+
+#### Fase 1 — Críticos (C1–C4)
+| Archivo | Fix |
+|---------|-----|
+| `LoginProveedorScreen.js` | `handleForgotPassword` con `supabase.auth.resetPasswordForEmail()` |
+| `LoginProveedorScreen.js` | Botón "Regístrate" muestra Alert con datos de contacto |
+| `TouristTabs.js` | FABButton usa `useNavigation()` → navega a `LoginProveedor` (antes mostraba Alert) |
+| `BienvenidaScreen.js` | Link "¿Sos proveedor? Accedé aquí" añadido al pie de la pantalla |
+| `OfertaCard.js` | Favorito reemplaza `useState` local por hook `useFavorites()` → sincronizado |
+| `MisPublicacionesScreen.js` | Estado de error visible con botón "Reintentar" |
+| `DetalleOfertaScreen.js` | Botón "Llamar ahora" funcional con `Linking.openURL('tel:...')` |
+| `PerfilProveedorScreen.js` | Todos los ítems del menú responden con `Alert` informativo |
+
+#### Fase 1 — Correcciones de tabla Supabase
+| Archivo | Fix |
+|---------|-----|
+| `useListings.js` | `.from('listings')` → `.from('provider_listings')` |
+| `NuevaPublicacionScreen.js` | `.from('listings')` → `.from('provider_listings')`, columnas ajustadas |
+| `EditarPublicacionScreen.js` | `.from('listings')` → `.from('provider_listings')` en UPDATE y toggle |
+
+#### Fase 2 — Medios (M5–M8)
+| Archivo | Fix |
+|---------|-----|
+| `colors.js` | Agregados: `successLight`, `warningLight`, `errorLight`, `categoryService`, `categoryBusiness` |
+| `ReservasScreen.js` | `STATUS_CONFIG` usa tokens del theme (sin hex hardcodeados) |
+| `MensajesScreen.js` | `onlineDot` y `rowUnread` usan `colors.success` / `colors.primaryLight` |
+| `OfertaCard.js` | Colores de categoría usan `colors.categoryService` / `colors.categoryBusiness` |
+| `useOffers.js` | Distingue error real (setea error state) vs tabla vacía (fallback silencioso a mock) |
+| `EstadisticasScreen.js` | Lógica `displayListings` simplificada: real listings + métricas mock por slot |
+| `BarChart.js` | Guard: retorna null si data vacío, sin estructura `{views}`, o maxViews=0 |
+| `MisPublicacionesScreen.js` | `paddingBottom` 120→160 para que FAB no tape el último ítem |
+
+#### Fase 3 — Leves (L1–L10)
+| Archivo | Fix |
+|---------|-----|
+| `LoginProveedorScreen.js` | Validación regex de email antes de llamar a Supabase |
+| `LoginProveedorScreen.js` | `ActivityIndicator` visible durante auth (reemplaza solo icono) |
+| `DetalleOfertaScreen.js` | `(offer.reviews ?? []).map(...)` — guard contra `undefined` |
+| `DetalleOfertaScreen.js` | Guard `if (!offer.phone) return` en `handleCall` |
+| `DetalleOfertaScreen.js` | `LayoutAnimation.easeInEaseOut` en toggle "Leer más/menos" |
+| `OfertaCard.js` | `onError` en Image → fallback a picsum con seed alternativo |
+| `ChatScreen.js` | FlatList: `initialNumToRender=15`, `maxToRenderPerBatch=10`, `windowSize=5` |
+| `PerfilProveedorScreen.js` | Seed avatar: `user?.id ?? 'provider_default'` |
+| `ReservasScreen.js` | Empty state con texto contextual según filtro activo |
+| `MisPublicacionesScreen.js` | `SkeletonCard` reemplaza `ActivityIndicator` durante loading |
+
+#### Nuevo componente
+| Archivo | Descripción |
+|---------|-------------|
+| `src/components/SkeletonCard.js` | Placeholder animado (fade pulse) para estados de carga en listados |
+
+#### Bug crítico extra detectado post-QA
+| Archivo | Fix |
+|---------|-----|
+| `ListadoOfertasScreen.js` | `useMemo` faltaba `offers` en dependencias → filtro "Todos" aparecía vacío aunque hubiera datos cargados |
+| `ListadoOfertasScreen.js` | `ListEmptyComponent` diferencia búsqueda sin resultados vs categoría vacía |
+
+#### EAS publicado
+```bash
+eas update --branch preview --message "v3.1: QA pass - 29 fixes"
+```
+
+---
+
+### v3.0 — Feb 2026 (demo completa)
+
+#### Nuevos archivos
+| Archivo | Descripción |
+|---------|-------------|
+| `src/hooks/useFavorites.js` | Favoritos persistidos en AsyncStorage; pre-seed desde mockData |
+| `src/screens/EditarPublicacionScreen.js` | Form pre-cargado + UPDATE Supabase + toggle activo/pausado |
+| `src/screens/FavoritosScreen.js` | Lista de ofertas favoritas del turista; quitar con un toque |
+| `src/screens/ReservasScreen.js` | Reservas mock con filtros por estado y cancelación local |
+| `src/screens/MensajesScreen.js` | Lista de conversaciones del proveedor con badges de no leídos |
+| `src/screens/ChatScreen.js` | UI de chat con historial e input funcional (estado local) |
+
+#### Archivos modificados
+| Archivo | Cambio |
+|---------|--------|
+| `src/components/ListingItem.js` | Prop `onEdit` conectada al botón Editar |
+| `src/screens/MisPublicacionesScreen.js` | Pasa `onEdit` con item y `refresh` a `ListingItem` |
+| `src/screens/DetalleOfertaScreen.js` | Favorito sincronizado con AsyncStorage vía `useFavorites` |
+| `src/screens/EstadisticasScreen.js` | Conteos reales de listings (activas/pendientes/pausadas) desde `useListings` |
+| `src/navigation/TouristTabs.js` | Reservas y Favoritos reemplazan PlaceholderScreen |
+| `src/navigation/ProviderTabs.js` | Mensajes reemplaza PlaceholderScreen |
+| `src/navigation/AppNavigator.js` | EditarPublicacion y Chat agregados al ProviderAreaStack |
+
+#### Migración SDK 52 → 54
+| Paquete | v2.0 | v3.0 |
+|---------|------|------|
+| expo | ~52.0.18 | ^54.0.33 |
+| react | 18.3.1 | 19.1.0 |
+| react-native | 0.76.5 | 0.81.5 |
+| react-native-screens | ~4.1.0 | ~4.16.0 |
+| react-native-safe-area-context | 4.12.0 | ~5.6.0 |
+| react-native-gesture-handler | ~2.20.2 | ~2.28.0 |
+| @expo/vector-icons | ^14.0.4 | ^15.0.3 |
+
+---
 
 ### v2.0 — Feb 2026 (backend Supabase)
 
@@ -899,4 +1018,4 @@ El mock proveedor es inconsistente: cada pantalla mostraba su propio set de 4 ta
 ---
 
 *Proyecto generado a partir de mockups en Stitch (Google). Desarrollado como MVP de capacitación.*
-*Tecnologías: React Native 0.76 · Expo SDK 52 · React Navigation v6 · Supabase v2 · JavaScript ES2022*
+*Tecnologías: React Native 0.81.5 · Expo SDK 54 · React Navigation v6 · Supabase v2 · JavaScript ES2022*

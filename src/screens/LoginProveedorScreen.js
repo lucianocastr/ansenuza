@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -22,9 +23,29 @@ export default function LoginProveedorScreen({ navigation }) {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      Alert.alert('Ingresá tu email', 'Escribí tu correo electrónico en el campo de arriba y luego tocá esta opción.');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    setLoading(false);
+    if (error) {
+      Alert.alert('Error', error.message);
+    } else {
+      Alert.alert('Correo enviado', `Te enviamos un link para restablecer tu contraseña a ${email.trim()}.`);
+    }
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Campos requeridos', 'Por favor completá el email y la contraseña.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert('Email inválido', 'Por favor ingresá un correo electrónico válido.');
       return;
     }
 
@@ -94,7 +115,7 @@ export default function LoginProveedorScreen({ navigation }) {
             <View style={styles.field}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>Contraseña</Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={handleForgotPassword}>
                   <Text style={styles.forgot}>¿Olvidaste tu contraseña?</Text>
                 </TouchableOpacity>
               </View>
@@ -144,14 +165,17 @@ export default function LoginProveedorScreen({ navigation }) {
               <Text style={styles.loginButtonText}>
                 {loading ? 'Ingresando...' : 'Iniciar Sesión'}
               </Text>
-              {!loading && <MaterialIcons name="login" size={20} color="white" />}
+              {loading
+                ? <ActivityIndicator size="small" color="white" />
+                : <MaterialIcons name="login" size={20} color="white" />
+              }
             </TouchableOpacity>
           </View>
 
           {/* Registro */}
           <View style={styles.registerRow}>
             <Text style={styles.registerText}>¿Aún no eres proveedor? </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => Alert.alert('Registro de proveedor', 'Para registrarte como proveedor en Ansenuza, comunicate con nosotros a través de turismo@ansenuza.com o llamá al +54 9 3562 000-000.')}>
               <Text style={styles.registerLink}>Regístrate como proveedor</Text>
             </TouchableOpacity>
           </View>

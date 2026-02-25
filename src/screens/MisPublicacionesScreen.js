@@ -6,16 +6,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../theme/colors';
 import { useListings } from '../hooks/useListings';
 import ListingItem from '../components/ListingItem';
+import SkeletonCard from '../components/SkeletonCard';
 
 export default function MisPublicacionesScreen({ navigation }) {
-  const { listings, loading, refresh } = useListings();
+  const { listings, loading, error, refresh } = useListings();
 
   const stats = useMemo(() => [
     { label: 'Activas', value: String(listings.filter(l => l.status === 'active').length), color: colors.primary },
@@ -62,8 +62,18 @@ export default function MisPublicacionesScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+      {error ? (
+        <View style={styles.errorState}>
+          <MaterialIcons name="cloud-off" size={48} color={colors.textMuted} />
+          <Text style={styles.errorText}>No se pudieron cargar las publicaciones</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={refresh}>
+            <Text style={styles.retryText}>Reintentar</Text>
+          </TouchableOpacity>
+        </View>
+      ) : loading ? (
+        <View style={{ paddingHorizontal: 16, paddingTop: 12, gap: 12 }}>
+          {[1, 2, 3].map((k) => <SkeletonCard key={k} />)}
+        </View>
       ) : (
         <FlatList
           data={listings}
@@ -72,6 +82,7 @@ export default function MisPublicacionesScreen({ navigation }) {
             <ListingItem
               item={item}
               onStats={() => navigation.navigate('Estadísticas')}
+              onEdit={() => navigation.navigate('EditarPublicacion', { item, onSuccess: refresh })}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -165,7 +176,7 @@ const styles = StyleSheet.create({
   listTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
   filterBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   filterText: { fontSize: 13, fontWeight: '600', color: colors.primary },
-  listContent: { paddingHorizontal: 16, gap: 12, paddingBottom: 120 },
+  listContent: { paddingHorizontal: 16, gap: 12, paddingBottom: 160 },
   fab: {
     position: 'absolute',
     bottom: 80,
@@ -185,4 +196,8 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   fabText: { color: 'white', fontSize: 15, fontWeight: '700' },
+  errorState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  errorText: { fontSize: 14, color: colors.textSecondary, textAlign: 'center' },
+  retryBtn: { paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.primary, borderRadius: 10 },
+  retryText: { color: 'white', fontWeight: '700', fontSize: 14 },
 });

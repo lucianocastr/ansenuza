@@ -9,7 +9,7 @@ const STATUS_CONFIG = {
   paused: { label: 'Pausado', color: '#94a3b8', bg: '#f1f5f9' },
 };
 
-export default function ListingItem({ item, onStats }) {
+export default function ListingItem({ item, onStats, onEdit }) {
   const status = STATUS_CONFIG[item.status] || STATUS_CONFIG.paused;
 
   return (
@@ -37,7 +37,7 @@ export default function ListingItem({ item, onStats }) {
 
       {/* Acciones */}
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.editBtn}>
+        <TouchableOpacity style={styles.editBtn} onPress={onEdit}>
           <MaterialIcons name="edit" size={18} color={colors.primary} />
           <Text style={styles.editText}>Editar</Text>
         </TouchableOpacity>

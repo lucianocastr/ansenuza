@@ -9,10 +9,19 @@ import {
   StyleSheet,
   Alert,
   Dimensions,
+  Linking,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from 'react-native';
+
+if (Platform.OS === 'android') {
+  UIManager.setLayoutAnimationEnabledExperimental?.(true);
+}
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../theme/colors';
+import { useFavorites } from '../hooks/useFavorites';
 
 const { width } = Dimensions.get('window');
 
@@ -34,9 +43,15 @@ function StarRating({ rating }) {
 export default function DetalleOfertaScreen({ route, navigation }) {
   const { offer } = route.params;
   const [comment, setComment] = useState('');
-  const [isFavorite, setIsFavorite] = useState(offer.isFavorite);
   const [descExpanded, setDescExpanded] = useState(false);
+  const { isFavorite, toggleFavorite } = useFavorites();
   const insets = useSafeAreaInsets();
+
+  const handleCall = () => {
+    if (!offer.phone) return;
+    const phone = offer.phone.replace(/\D/g, '');
+    Linking.openURL(`tel:+${phone}`);
+  };
 
   const handleReservar = () => {
     Alert.alert(
@@ -44,7 +59,7 @@ export default function DetalleOfertaScreen({ route, navigation }) {
       `Te ponemos en contacto con ${offer.title}.\n\nTeléfono: ${offer.phone}`,
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Llamar', onPress: () => {} },
+        { text: 'Llamar', onPress: handleCall },
       ]
     );
   };
@@ -89,12 +104,12 @@ export default function DetalleOfertaScreen({ route, navigation }) {
           {/* Favorito */}
           <TouchableOpacity
             style={styles.favoriteBtn}
-            onPress={() => setIsFavorite(!isFavorite)}
+            onPress={() => toggleFavorite(offer.id)}
           >
             <MaterialIcons
-              name={isFavorite ? 'favorite' : 'favorite-border'}
+              name={isFavorite(offer.id) ? 'favorite' : 'favorite-border'}
               size={22}
-              color={isFavorite ? colors.primary : colors.textSecondary}
+              color={isFavorite(offer.id) ? colors.primary : colors.textSecondary}
             />
           </TouchableOpacity>
         </View>
@@ -151,7 +166,10 @@ export default function DetalleOfertaScreen({ route, navigation }) {
             </Text>
             <TouchableOpacity
               style={styles.readMoreBtn}
-              onPress={() => setDescExpanded(!descExpanded)}
+              onPress={() => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                setDescExpanded(!descExpanded);
+              }}
             >
               <Text style={styles.readMoreText}>
                 {descExpanded ? 'Leer menos' : 'Leer más'}
@@ -175,7 +193,7 @@ export default function DetalleOfertaScreen({ route, navigation }) {
                 <Text style={styles.contactPhone}>{offer.phone}</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.callBtn}>
+            <TouchableOpacity style={styles.callBtn} onPress={handleCall}>
               <Text style={styles.callBtnText}>Llamar ahora</Text>
             </TouchableOpacity>
           </View>
@@ -189,7 +207,7 @@ export default function DetalleOfertaScreen({ route, navigation }) {
               </TouchableOpacity>
             </View>
 
-            {offer.reviews.map((review) => (
+            {(offer.reviews ?? []).map((review) => (
               <View key={review.id} style={styles.reviewCard}>
                 <View style={styles.reviewHeader}>
                   <Image source={{ uri: review.avatar }} style={styles.avatar} />

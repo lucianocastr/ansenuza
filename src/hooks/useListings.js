@@ -12,7 +12,7 @@ export function useListings() {
     if (!user) return;
     setLoading(true);
     const { data, error } = await supabase
-      .from('listings')
+      .from('provider_listings')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });

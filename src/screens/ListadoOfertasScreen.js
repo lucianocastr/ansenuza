@@ -38,7 +38,7 @@ export default function ListadoOfertasScreen({ navigation }) {
       const matchesCategory = activeCategory === 'Todos' || o.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [search, activeCategory]);
+  }, [offers, search, activeCategory]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -135,7 +135,11 @@ export default function ListadoOfertasScreen({ navigation }) {
         ListEmptyComponent={
           <View style={styles.empty}>
             <MaterialIcons name="search-off" size={48} color={colors.textMuted} />
-            <Text style={styles.emptyText}>Sin resultados para "{search}"</Text>
+            <Text style={styles.emptyText}>
+              {search.length > 0
+                ? `Sin resultados para "${search}"`
+                : 'No hay ofertas disponibles en esta categoría.'}
+            </Text>
           </View>
         }
       />

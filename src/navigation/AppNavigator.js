@@ -9,6 +9,8 @@ import colors from '../theme/colors';
 import BienvenidaScreen from '../screens/BienvenidaScreen';
 import LoginProveedorScreen from '../screens/LoginProveedorScreen';
 import NuevaPublicacionScreen from '../screens/NuevaPublicacionScreen';
+import EditarPublicacionScreen from '../screens/EditarPublicacionScreen';
+import ChatScreen from '../screens/ChatScreen';
 import TouristTabs from './TouristTabs';
 import ProviderTabs from './ProviderTabs';
 
@@ -21,6 +23,8 @@ function ProviderAreaStack() {
     <ProviderStack.Navigator screenOptions={{ headerShown: false }}>
       <ProviderStack.Screen name="ProviderTabs" component={ProviderTabs} />
       <ProviderStack.Screen name="NuevaPublicacion" component={NuevaPublicacionScreen} />
+      <ProviderStack.Screen name="EditarPublicacion" component={EditarPublicacionScreen} />
+      <ProviderStack.Screen name="Chat" component={ChatScreen} />
     </ProviderStack.Navigator>
   );
 }

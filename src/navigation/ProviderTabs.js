@@ -5,8 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 import MisPublicacionesScreen from '../screens/MisPublicacionesScreen';
 import EstadisticasScreen from '../screens/EstadisticasScreen';
+import MensajesScreen from '../screens/MensajesScreen';
 import PerfilProveedorScreen from '../screens/PerfilProveedorScreen';
-import PlaceholderScreen from '../screens/PlaceholderScreen';
 import colors from '../theme/colors';
 
 const Tab = createBottomTabNavigator();
@@ -46,7 +46,7 @@ export default function ProviderTabs() {
       />
       <Tab.Screen
         name="Mensajes"
-        component={PlaceholderScreen}
+        component={MensajesScreen}
         options={{
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="chat-bubble-outline" size={24} color={color} />

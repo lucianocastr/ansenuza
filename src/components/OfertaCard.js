@@ -8,22 +8,29 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../theme/colors';
+import { useFavorites } from '../hooks/useFavorites';
 
 const CATEGORY_COLORS = {
   Hospedaje: colors.primary,
-  Servicio: '#f97316',
-  Negocio: '#0ea5e9',
+  Servicio: colors.categoryService,
+  Negocio: colors.categoryBusiness,
 };
 
 export default function OfertaCard({ offer, onPress }) {
-  const [isFavorite, setIsFavorite] = useState(offer.isFavorite);
+  const { isFavorite, toggleFavorite } = useFavorites();
   const categoryColor = CATEGORY_COLORS[offer.category] || colors.primary;
+  const [imgError, setImgError] = useState(false);
 
   return (
     <View style={styles.card}>
       {/* Imagen */}
       <View style={styles.imageContainer}>
-        <Image source={{ uri: offer.image }} style={styles.image} resizeMode="cover" />
+        <Image
+          source={{ uri: imgError ? `https://picsum.photos/seed/${offer.id}_fb/400/300` : offer.image }}
+          style={styles.image}
+          resizeMode="cover"
+          onError={() => setImgError(true)}
+        />
 
         {/* Badge categoría */}
         <View style={[styles.categoryBadge, { backgroundColor: categoryColor }]}>
@@ -33,13 +40,13 @@ export default function OfertaCard({ offer, onPress }) {
         {/* Favorito */}
         <TouchableOpacity
           style={styles.favoriteBtn}
-          onPress={() => setIsFavorite(!isFavorite)}
+          onPress={() => toggleFavorite(offer.id)}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <MaterialIcons
-            name={isFavorite ? 'favorite' : 'favorite-border'}
+            name={isFavorite(offer.id) ? 'favorite' : 'favorite-border'}
             size={20}
-            color={isFavorite ? colors.primary : colors.textSecondary}
+            color={isFavorite(offer.id) ? colors.primary : colors.textSecondary}
           />
         </TouchableOpacity>
       </View>

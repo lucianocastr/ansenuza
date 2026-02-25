@@ -14,64 +14,97 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../theme/colors';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
 
 const CATEGORIES = ['Hospedaje', 'Negocio', 'Servicio'];
 const FRECUENCIAS = ['Por noche', 'Por persona', 'Total paquete'];
 
-export default function NuevaPublicacionScreen({ navigation, route }) {
-  const { user } = useAuth();
-  const [category, setCategory] = useState('Hospedaje');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [frequency, setFrequency] = useState('Por noche');
-  const [address, setAddress] = useState('');
+function suffixToFreq(suffix) {
+  if (suffix === '/noche') return 'Por noche';
+  if (suffix === '/persona') return 'Por persona';
+  return 'Total paquete';
+}
+
+export default function EditarPublicacionScreen({ navigation, route }) {
+  const { item, onSuccess } = route.params;
+
+  const [category, setCategory] = useState(item.category || 'Hospedaje');
+  const [title, setTitle] = useState(item.title || '');
+  const [description, setDescription] = useState(item.description || '');
+  const [price, setPrice] = useState(String(item.price || ''));
+  const [frequency, setFrequency] = useState(suffixToFreq(item.price_suffix));
+  const [address, setAddress] = useState(item.location || '');
   const [freqOpen, setFreqOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
-  const handlePublicar = async () => {
+  const handleGuardar = async () => {
     if (!title.trim() || !price.trim()) {
       Alert.alert('Campos requeridos', 'Completá al menos el título y el precio.');
       return;
     }
-
     setSaving(true);
-    const { error } = await supabase.from('provider_listings').insert({
-      user_id: user.id,
-      title: title.trim(),
-      price: parseFloat(price),
-      location: address.trim() || 'Miramar de Ansenuza, Córdoba',
-      status: 'pending',
-      image: `https://picsum.photos/seed/${Date.now()}/200/200`,
-    });
+    const { error } = await supabase
+      .from('provider_listings')
+      .update({
+        title: title.trim(),
+        price: parseFloat(price),
+        location: address.trim() || 'Miramar de Ansenuza, Córdoba',
+      })
+      .eq('id', item.id);
     setSaving(false);
 
     if (error) {
-      Alert.alert('Error', 'No se pudo crear la publicación. Intentá de nuevo.');
+      Alert.alert('Error', 'No se pudo guardar. Intentá de nuevo.');
     } else {
-      Alert.alert(
-        '¡Publicación creada!',
-        `Tu oferta "${title}" fue enviada para revisión. Estará activa en las próximas 24 hs.`,
-        [{
-          text: 'Volver',
-          onPress: () => {
-            route.params?.onSuccess?.();
-            navigation.goBack();
-          },
-        }]
-      );
+      Alert.alert('¡Cambios guardados!', 'Tu publicación fue actualizada.', [
+        { text: 'Volver', onPress: () => { onSuccess?.(); navigation.goBack(); } },
+      ]);
     }
   };
 
+  const handleToggleStatus = () => {
+    if (item.status === 'pending') return;
+    const newStatus = item.status === 'active' ? 'paused' : 'active';
+    const accion = newStatus === 'active' ? 'activar' : 'pausar';
+    Alert.alert(
+      `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} publicación?`,
+      `La publicación "${title}" será ${newStatus === 'active' ? 'activada' : 'pausada'}.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: accion.charAt(0).toUpperCase() + accion.slice(1),
+          onPress: async () => {
+            setToggling(true);
+            const { error } = await supabase
+              .from('provider_listings')
+              .update({ status: newStatus })
+              .eq('id', item.id);
+            setToggling(false);
+            if (error) {
+              Alert.alert('Error', 'No se pudo cambiar el estado.');
+            } else {
+              Alert.alert(
+                'Listo',
+                `Publicación ${newStatus === 'active' ? 'activada' : 'pausada'} correctamente.`,
+                [{ text: 'OK', onPress: () => { onSuccess?.(); navigation.goBack(); } }]
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const isPaused = item.status === 'paused';
+  const isPending = item.status === 'pending';
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <MaterialIcons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Crear Nueva Publicación</Text>
+        <Text style={styles.headerTitle}>Editar Publicación</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -84,22 +117,42 @@ export default function NuevaPublicacionScreen({ navigation, route }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Fotos */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Fotos de la publicación</Text>
-            <View style={styles.photosGrid}>
-              <TouchableOpacity style={styles.photoAdd}>
-                <MaterialIcons name="add-a-photo" size={28} color={colors.primary} />
-                <Text style={styles.photoAddText}>Añadir</Text>
-              </TouchableOpacity>
-              <View style={styles.photoPlaceholder}>
-                <MaterialIcons name="image" size={32} color={colors.textMuted} />
-              </View>
-              <View style={styles.photoPlaceholder}>
-                <MaterialIcons name="image" size={32} color={colors.textMuted} />
-              </View>
-            </View>
-          </View>
+          {/* Banner de estado */}
+          <TouchableOpacity
+            style={[
+              styles.statusBanner,
+              isPaused ? styles.bannerPaused : isPending ? styles.bannerPending : styles.bannerActive,
+            ]}
+            onPress={handleToggleStatus}
+            disabled={toggling || isPending}
+            activeOpacity={isPending ? 1 : 0.8}
+          >
+            <MaterialIcons
+              name={
+                isPaused
+                  ? 'play-circle-outline'
+                  : isPending
+                  ? 'pending'
+                  : 'pause-circle-outline'
+              }
+              size={20}
+              color={isPaused ? '#10b981' : isPending ? '#f59e0b' : '#f59e0b'}
+            />
+            <Text
+              style={[
+                styles.bannerText,
+                { color: isPaused ? '#10b981' : isPending ? '#f59e0b' : '#f59e0b' },
+              ]}
+            >
+              {toggling
+                ? 'Actualizando...'
+                : isPaused
+                ? 'Publicación pausada — Tocar para activar'
+                : isPending
+                ? 'En revisión — No se puede cambiar el estado'
+                : 'Publicación activa — Tocar para pausar'}
+            </Text>
+          </TouchableOpacity>
 
           {/* Categoría */}
           <View style={styles.section}>
@@ -162,7 +215,6 @@ export default function NuevaPublicacionScreen({ navigation, route }) {
                 />
               </View>
             </View>
-
             <View style={[styles.section, { flex: 1 }]}>
               <Text style={styles.label}>Frecuencia</Text>
               <TouchableOpacity
@@ -180,7 +232,12 @@ export default function NuevaPublicacionScreen({ navigation, route }) {
                       style={styles.dropdownItem}
                       onPress={() => { setFrequency(f); setFreqOpen(false); }}
                     >
-                      <Text style={[styles.dropdownText, f === frequency && { color: colors.primary, fontWeight: '700' }]}>
+                      <Text
+                        style={[
+                          styles.dropdownText,
+                          f === frequency && { color: colors.primary, fontWeight: '700' },
+                        ]}
+                      >
                         {f}
                       </Text>
                     </TouchableOpacity>
@@ -190,27 +247,11 @@ export default function NuevaPublicacionScreen({ navigation, route }) {
             </View>
           </View>
 
-          {/* Fechas (decorativo) */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Fechas disponibles</Text>
-            <TouchableOpacity style={styles.dateBtn}>
-              <MaterialIcons name="calendar-month" size={20} color={colors.textSecondary} />
-              <Text style={styles.dateBtnText}>Seleccionar rango de fechas</Text>
-              <MaterialIcons name="chevron-right" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-          </View>
-
           {/* Ubicación */}
           <View style={styles.section}>
             <Text style={styles.label}>Ubicación</Text>
-            <View style={styles.mapPlaceholder}>
-              <View style={styles.mapOverlay}>
-                <MaterialIcons name="location-on" size={22} color={colors.primary} />
-                <Text style={styles.mapText}>Marcar en el mapa</Text>
-              </View>
-            </View>
             <TextInput
-              style={[styles.input, { marginTop: 8 }]}
+              style={styles.input}
               placeholder="Dirección exacta o referencia"
               placeholderTextColor={colors.textMuted}
               value={address}
@@ -221,13 +262,13 @@ export default function NuevaPublicacionScreen({ navigation, route }) {
           {/* Acciones */}
           <View style={styles.actionsSection}>
             <TouchableOpacity
-              style={[styles.publishBtn, saving && { opacity: 0.7 }]}
-              onPress={handlePublicar}
+              style={[styles.saveBtn, saving && { opacity: 0.7 }]}
+              onPress={handleGuardar}
               activeOpacity={0.88}
               disabled={saving}
             >
-              <MaterialIcons name="publish" size={20} color="white" />
-              <Text style={styles.publishBtnText}>{saving ? 'Publicando...' : 'Publicar'}</Text>
+              <MaterialIcons name="save" size={20} color="white" />
+              <Text style={styles.saveBtnText}>{saving ? 'Guardando...' : 'Guardar cambios'}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>
               <Text style={styles.cancelBtnText}>Cancelar</Text>
@@ -254,31 +295,21 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
   scroll: { padding: 16, paddingBottom: 40 },
+  statusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
+    borderWidth: 1,
+  },
+  bannerActive: { backgroundColor: '#fef9ec', borderColor: '#fde68a' },
+  bannerPaused: { backgroundColor: '#f0fdf4', borderColor: '#a7f3d0' },
+  bannerPending: { backgroundColor: '#fef9ec', borderColor: '#fde68a' },
+  bannerText: { fontSize: 13, fontWeight: '600', flex: 1 },
   section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 },
   label: { fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 8 },
-  photosGrid: { flexDirection: 'row', gap: 12 },
-  photoAdd: {
-    width: 100,
-    height: 100,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: colors.borderPrimary,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  photoAddText: { fontSize: 10, fontWeight: '700', color: colors.primary },
-  photoPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 12,
-    backgroundColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   chips: { flexDirection: 'row', gap: 8 },
   chip: {
     paddingHorizontal: 16,
@@ -340,45 +371,8 @@ const styles = StyleSheet.create({
   },
   dropdownItem: { padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
   dropdownText: { fontSize: 14, color: colors.text },
-  dateBtn: {
-    height: 52,
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.borderPrimary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    gap: 10,
-  },
-  dateBtnText: { flex: 1, fontSize: 14, color: colors.textSecondary },
-  mapPlaceholder: {
-    height: 140,
-    borderRadius: 12,
-    backgroundColor: colors.border,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderPrimary,
-  },
-  mapOverlay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.white,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 999,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  mapText: { fontSize: 12, fontWeight: '700', color: colors.text },
   actionsSection: { gap: 12, marginTop: 8 },
-  publishBtn: {
+  saveBtn: {
     height: 54,
     backgroundColor: colors.primary,
     borderRadius: 14,
@@ -392,7 +386,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
-  publishBtnText: { color: 'white', fontSize: 15, fontWeight: '700' },
+  saveBtnText: { color: 'white', fontSize: 15, fontWeight: '700' },
   cancelBtn: {
     height: 54,
     backgroundColor: colors.border,

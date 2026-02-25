@@ -15,6 +15,11 @@ const colors = {
   star: '#f59e0b',
   trendUp: '#16a34a',
   trendDown: '#dc2626',
+  successLight: '#d1fae5',
+  warningLight: '#fef3c7',
+  errorLight: '#fee2e2',
+  categoryService: '#f97316',
+  categoryBusiness: '#0ea5e9',
 };
 
 export default colors;

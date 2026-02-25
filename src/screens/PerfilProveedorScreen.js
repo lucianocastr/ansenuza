@@ -41,7 +41,7 @@ export default function PerfilProveedorScreen() {
       {/* Avatar y datos */}
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
-          <Image source={{ uri: `https://picsum.photos/seed/${user?.id}/100/100` }} style={styles.avatar} />
+          <Image source={{ uri: `https://picsum.photos/seed/${user?.id ?? 'provider_default'}/100/100` }} style={styles.avatar} />
         </View>
         <Text style={styles.name}>{user?.user_metadata?.name ?? 'Proveedor'}</Text>
         <Text style={styles.company}>{user?.user_metadata?.company ?? 'Turismo Ansenuza'}</Text>
@@ -58,12 +58,12 @@ export default function PerfilProveedorScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>CONFIGURACIÓN</Text>
         {[
-          { icon: 'edit', label: 'Editar perfil' },
-          { icon: 'notifications-none', label: 'Notificaciones' },
-          { icon: 'lock-outline', label: 'Seguridad' },
-          { icon: 'help-outline', label: 'Ayuda y soporte' },
+          { icon: 'edit', label: 'Editar perfil', onPress: () => Alert.alert('Editar perfil', 'Podés actualizar tu nombre, empresa y datos de contacto desde el panel web de Ansenuza.') },
+          { icon: 'notifications-none', label: 'Notificaciones', onPress: () => Alert.alert('Notificaciones', 'Las notificaciones push estarán disponibles en la próxima versión.') },
+          { icon: 'lock-outline', label: 'Seguridad', onPress: () => Alert.alert('Seguridad', 'Para cambiar tu contraseña, usá la opción "¿Olvidaste tu contraseña?" en el login.') },
+          { icon: 'help-outline', label: 'Ayuda y soporte', onPress: () => Alert.alert('Ayuda y soporte', 'Contactanos en soporte@ansenuza.com o al +54 9 3562 000-000. Horario: Lun-Vie 9-18 hs.') },
         ].map((item) => (
-          <TouchableOpacity key={item.label} style={styles.menuItem}>
+          <TouchableOpacity key={item.label} style={styles.menuItem} onPress={item.onPress}>
             <MaterialIcons name={item.icon} size={22} color={colors.primary} />
             <Text style={styles.menuLabel}>{item.label}</Text>
             <MaterialIcons name="chevron-right" size={20} color={colors.textMuted} />

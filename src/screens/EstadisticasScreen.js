@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../theme/colors';
 import { providerStats } from '../data/mockData';
+import { useListings } from '../hooks/useListings';
 import StatCard from '../components/StatCard';
 import BarChart from '../components/BarChart';
 
@@ -18,11 +19,24 @@ const PERIODS = ['Últimos 30 días', 'Este mes', 'Año'];
 
 export default function EstadisticasScreen({ navigation }) {
   const [activePeriod, setActivePeriod] = useState('Últimos 30 días');
+  const { listings } = useListings();
   const s = providerStats;
+
+  const activeCount = listings.filter((l) => l.status === 'active').length;
+  const pendingCount = listings.filter((l) => l.status === 'pending').length;
+  const pausedCount = listings.filter((l) => l.status === 'paused').length;
+  const totalCount = listings.length;
+
+  // Combina datos reales (título/imagen) con métricas mock para la demo
+  const displayListings = listings.length > 0
+    ? listings.slice(0, 3).map((listing, i) => {
+        const mockRef = s.topPublications[i] ?? s.topPublications[0];
+        return { ...listing, views: mockRef.views, bookings: mockRef.bookings, revenue: mockRef.revenue };
+      })
+    : s.topPublications;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Estadísticas de Rendimiento</Text>
       </View>
@@ -52,7 +66,33 @@ export default function EstadisticasScreen({ navigation }) {
           ))}
         </ScrollView>
 
-        {/* Cards de resumen */}
+        {/* Resumen de publicaciones reales */}
+        {totalCount > 0 && (
+          <View style={styles.realStatsCard}>
+            <Text style={styles.realStatsTitle}>Mis publicaciones</Text>
+            <View style={styles.realStatsRow}>
+              <View style={styles.realStatItem}>
+                <View style={[styles.realStatDot, { backgroundColor: colors.success }]} />
+                <Text style={styles.realStatValue}>{activeCount}</Text>
+                <Text style={styles.realStatLabel}>Activas</Text>
+              </View>
+              <View style={styles.realStatDivider} />
+              <View style={styles.realStatItem}>
+                <View style={[styles.realStatDot, { backgroundColor: colors.warning }]} />
+                <Text style={styles.realStatValue}>{pendingCount}</Text>
+                <Text style={styles.realStatLabel}>Pendientes</Text>
+              </View>
+              <View style={styles.realStatDivider} />
+              <View style={styles.realStatItem}>
+                <View style={[styles.realStatDot, { backgroundColor: colors.textMuted }]} />
+                <Text style={styles.realStatValue}>{pausedCount}</Text>
+                <Text style={styles.realStatLabel}>Pausadas</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Cards de resumen (métricas de alcance) */}
         <View style={styles.statsGrid}>
           <StatCard
             label="Visualizaciones totales"
@@ -99,8 +139,12 @@ export default function EstadisticasScreen({ navigation }) {
         <View style={styles.popularSection}>
           <Text style={styles.popularTitle}>Publicaciones más populares</Text>
           <View style={styles.popularList}>
-            {s.topPublications.map((pub) => (
-              <TouchableOpacity key={pub.id} style={styles.popularItem}>
+            {displayListings.map((pub) => (
+              <TouchableOpacity
+                key={pub.id}
+                style={styles.popularItem}
+                onPress={() => navigation.navigate('Inicio')}
+              >
                 <Image source={{ uri: pub.image }} style={styles.pubImage} />
                 <View style={styles.pubInfo}>
                   <Text style={styles.pubTitle} numberOfLines={1}>
@@ -152,6 +196,32 @@ const styles = StyleSheet.create({
   periodChipActive: { backgroundColor: colors.primary },
   periodText: { fontSize: 13, fontWeight: '500', color: colors.text },
   periodTextActive: { color: 'white', fontWeight: '600' },
+  realStatsCard: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.borderPrimary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  realStatsTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 14,
+  },
+  realStatsRow: { flexDirection: 'row', alignItems: 'center' },
+  realStatItem: { flex: 1, alignItems: 'center', gap: 4 },
+  realStatDot: { width: 8, height: 8, borderRadius: 4 },
+  realStatValue: { fontSize: 22, fontWeight: '800', color: colors.text },
+  realStatLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: '600' },
+  realStatDivider: { width: 1, height: 36, backgroundColor: colors.border },
   statsGrid: { paddingHorizontal: 16, gap: 12, marginBottom: 16 },
   chartCard: {
     marginHorizontal: 16,
@@ -179,7 +249,13 @@ const styles = StyleSheet.create({
   legendDot: { width: 10, height: 10, borderRadius: 5 },
   legendText: { fontSize: 11, color: colors.textSecondary },
   popularSection: { paddingHorizontal: 16 },
-  popularTitle: { fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: 12, paddingHorizontal: 4 },
+  popularTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
   popularList: { gap: 10 },
   popularItem: {
     flexDirection: 'row',

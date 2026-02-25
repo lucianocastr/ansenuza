@@ -1,12 +1,15 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import ListadoOfertasScreen from '../screens/ListadoOfertasScreen';
 import DetalleOfertaScreen from '../screens/DetalleOfertaScreen';
 import PerfilScreen from '../screens/PerfilScreen';
+import ReservasScreen from '../screens/ReservasScreen';
+import FavoritosScreen from '../screens/FavoritosScreen';
 import PlaceholderScreen from '../screens/PlaceholderScreen';
 import colors from '../theme/colors';
 
@@ -25,16 +28,11 @@ function ExplorarNavigator() {
 
 // Botón FAB flotante central
 function FABButton() {
+  const navigation = useNavigation();
   return (
     <TouchableOpacity
       style={styles.fab}
-      onPress={() =>
-        Alert.alert(
-          'Publicar oferta',
-          'Accedé como Proveedor desde tu Perfil para publicar ofertas en Ansenuza.',
-          [{ text: 'Entendido', style: 'default' }]
-        )
-      }
+      onPress={() => navigation.navigate('LoginProveedor')}
       activeOpacity={0.85}
     >
       <MaterialIcons name="add" size={30} color="white" />
@@ -62,7 +60,7 @@ export default function TouristTabs() {
       />
       <Tab.Screen
         name="Reservas"
-        component={PlaceholderScreen}
+        component={ReservasScreen}
         options={{
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="confirmation-number" size={24} color={color} />
@@ -80,7 +78,7 @@ export default function TouristTabs() {
       />
       <Tab.Screen
         name="Favoritos"
-        component={PlaceholderScreen}
+        component={FavoritosScreen}
         options={{
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="favorite-border" size={24} color={color} />

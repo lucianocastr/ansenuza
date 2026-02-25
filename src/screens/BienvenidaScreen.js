@@ -69,6 +69,10 @@ export default function BienvenidaScreen({ navigation }) {
         <Text style={styles.caption}>
           Explora el quinto lago salino más grande del mundo
         </Text>
+
+        <TouchableOpacity onPress={() => navigation.navigate('LoginProveedor')}>
+          <Text style={styles.providerLink}>¿Sos proveedor? Accedé aquí</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -195,5 +199,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textMuted,
     textAlign: 'center',
+  },
+  providerLink: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
