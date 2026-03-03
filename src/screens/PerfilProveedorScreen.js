@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
   Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -13,7 +14,7 @@ import colors from '../theme/colors';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
-export default function PerfilProveedorScreen() {
+export default function PerfilProveedorScreen({ navigation }) {
   const { user } = useAuth();
 
   const handleLogout = () => {
@@ -62,11 +63,17 @@ export default function PerfilProveedorScreen() {
           { icon: 'notifications-none', label: 'Notificaciones', onPress: () => Alert.alert('Notificaciones', 'Las notificaciones push estarán disponibles en la próxima versión.') },
           { icon: 'lock-outline', label: 'Seguridad', onPress: () => Alert.alert('Seguridad', 'Para cambiar tu contraseña, usá la opción "¿Olvidaste tu contraseña?" en el login.') },
           { icon: 'help-outline', label: 'Ayuda y soporte', onPress: () => Alert.alert('Ayuda y soporte', 'Contactanos en soporte@ansenuza.com o al +54 9 3562 000-000. Horario: Lun-Vie 9-18 hs.') },
+          { icon: 'privacy-tip', label: 'Política de Privacidad', onPress: () => Linking.openURL('https://ismosoft.com.ar/privacidad/') },
+          { icon: 'delete-forever', label: 'Eliminar cuenta', onPress: () => navigation.navigate('EliminarCuenta'), destructive: true },
         ].map((item) => (
-          <TouchableOpacity key={item.label} style={styles.menuItem} onPress={item.onPress}>
-            <MaterialIcons name={item.icon} size={22} color={colors.primary} />
-            <Text style={styles.menuLabel}>{item.label}</Text>
-            <MaterialIcons name="chevron-right" size={20} color={colors.textMuted} />
+          <TouchableOpacity
+            key={item.label}
+            style={[styles.menuItem, item.destructive && styles.menuItemDestructive]}
+            onPress={item.onPress}
+          >
+            <MaterialIcons name={item.icon} size={22} color={item.destructive ? colors.error : colors.primary} />
+            <Text style={[styles.menuLabel, item.destructive && styles.menuLabelDestructive]}>{item.label}</Text>
+            <MaterialIcons name="chevron-right" size={20} color={item.destructive ? colors.error : colors.textMuted} />
           </TouchableOpacity>
         ))}
       </View>
@@ -130,6 +137,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   menuLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.text },
+  menuItemDestructive: {
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+    backgroundColor: 'rgba(239, 68, 68, 0.03)',
+  },
+  menuLabelDestructive: { color: colors.error, fontWeight: '600' },
   logoutBtn: {
     marginHorizontal: 20,
     flexDirection: 'row',

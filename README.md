@@ -1,7 +1,7 @@
 # Miramar de Ansenuza — Documentación Completa del Proyecto
 
 > **MVP React Native + Expo** · JavaScript · React Navigation v6 · Supabase
-> Última actualización: Feb 2026 · Estado: v3.1 — QA Pass completo: 29 bugs corregidos, EAS publicado en branch preview
+> Última actualización: Mar 2026 · Estado: v4.0 — Cumplimiento Apple App Store + Google Play Store
 
 ---
 
@@ -24,6 +24,8 @@
 14. [Solución de problemas frecuentes](#14-solución-de-problemas-frecuentes)
 15. [Próximas iteraciones (roadmap)](#15-próximas-iteraciones-roadmap)
 16. [Registro de decisiones](#16-registro-de-decisiones)
+17. [Historial de cambios](#17-historial-de-cambios)
+18. [Cumplimiento de tiendas (App Store + Google Play)](#18-cumplimiento-de-tiendas-app-store--google-play)
 
 ---
 
@@ -91,7 +93,12 @@ LoginProveedorScreen
             │    └─ Top 3 publicaciones más populares
             ├─ Tab "Mensajes" → Placeholder
             └─ Tab "Perfil" → PerfilProveedorScreen
-                  └─ [Cerrar sesión] → Alert → navigation.navigate('Bienvenida')
+                  ├─ [Política de Privacidad] → Linking.openURL ismosoft.com.ar/privacidad/
+                  ├─ [Eliminar cuenta] → EliminarCuentaScreen
+                  │    ├─ Input confirmación "ELIMINAR"
+                  │    ├─ DELETE provider_listings WHERE user_id = user.id
+                  │    └─ supabase.auth.signOut() → AuthContext redirige a Bienvenida
+                  └─ [Cerrar sesión] → Alert → supabase.auth.signOut()
 ```
 
 ---
@@ -118,9 +125,12 @@ NavigationContainer
         │   ├─ "Inicio"           → MisPublicacionesScreen  ← tab 1, todos los mocks proveedor
         │   ├─ "Publicaciones"    → MisPublicacionesScreen  ← tab 2, mock administración
         │   ├─ "Estadísticas"     → EstadisticasScreen
-        │   ├─ "Mensajes"         → PlaceholderScreen
+        │   ├─ "Mensajes"         → MensajesScreen → Chat (pushed)
         │   └─ "PerfilProveedor"  → PerfilProveedorScreen
-        └─ "NuevaPublicacion" → NuevaPublicacionScreen
+        ├─ "NuevaPublicacion" → NuevaPublicacionScreen
+        ├─ "EditarPublicacion" → EditarPublicacionScreen
+        ├─ "Chat"             → ChatScreen
+        └─ "EliminarCuenta"  → EliminarCuentaScreen
 ```
 
 ### Por qué esta arquitectura
@@ -161,9 +171,13 @@ NavigationContainer
 AnsenuZaApp/
 │
 ├── App.js                          # Entry point: SafeAreaProvider + StatusBar + AppNavigator
-├── app.json                        # Nombre, slug, íconos, orientación (portrait), splash
+├── app.json                        # Nombre, slug, ícono, splash (#1B2A4A), adaptiveIcon, privacyManifests iOS
 ├── package.json                    # Dependencias exactas
 ├── babel.config.js                 # Preset: babel-preset-expo
+├── assets/
+│   ├── icon.png                    # Ícono ISMO SOFT — usado por iOS y Android
+│   ├── splash.png                  # Splash screen — logo centrado sobre fondo #1B2A4A
+│   └── adaptive-icon.png           # Ícono adaptativo Android
 │
 └── src/
     │
@@ -188,8 +202,9 @@ AnsenuZaApp/
     │   ├── MisPublicacionesScreen.js   # Stats + FlatList de ListingItem + FAB.
     │   ├── NuevaPublicacionScreen.js   # Formulario completo de creación.
     │   ├── EstadisticasScreen.js       # Métricas + BarChart + top publicaciones.
-    │   ├── PerfilScreen.js             # Perfil turista + acceso a LoginProveedor.
-    │   ├── PerfilProveedorScreen.js    # Perfil proveedor + logout.
+    │   ├── PerfilScreen.js             # Perfil turista + acceso a LoginProveedor + link política.
+    │   ├── PerfilProveedorScreen.js    # Perfil proveedor + logout + link política + eliminar cuenta.
+    │   ├── EliminarCuentaScreen.js     # Input "ELIMINAR" + DELETE listings + signOut (req. stores).
     │   └── PlaceholderScreen.js        # Pantalla genérica "Próximamente".
     │
     └── components/
@@ -354,13 +369,14 @@ AnsenuZaApp/
 | `BienvenidaScreen` | Ruta inicial del AppNavigator | Sin estado. Navega a `TouristArea` |
 | `ListadoOfertasScreen` | Tab "Explorar" → ExplorarStack | `search: string`, `activeCategory: string`. Filtra con `useMemo` |
 | `DetalleOfertaScreen` | Push desde ListadoOfertas | `comment: string`, `isFavorite: boolean`, `descExpanded: boolean`. Recibe `offer` por `route.params` |
-| `LoginProveedorScreen` | Stack raíz | `email`, `password`, `showPassword`, `rememberMe`, `loading`. Valida contra `MOCK_USER` |
-| `MisPublicacionesScreen` | Tab "Publicaciones" | Sin estado. Lee `providerListings` de mockData |
+| `LoginProveedorScreen` | Stack raíz | `email`, `password`, `showPassword`, `rememberMe`, `loading`. Aviso de política con `Linking` |
+| `MisPublicacionesScreen` | Tab "Publicaciones" | `useListings()` hook. SkeletonCard en loading, error state con Reintentar |
 | `NuevaPublicacionScreen` | Push desde MisPublicaciones | `category`, `title`, `description`, `price`, `frequency`, `address`, `freqOpen` |
-| `EstadisticasScreen` | Tab "Estadísticas" | `activePeriod: string`. Lee `providerStats` de mockData |
-| `PerfilScreen` | Tab "Perfil" (turista) | Sin estado |
-| `PerfilProveedorScreen` | Tab "Perfil" (proveedor) | Sin estado. Logout con Alert |
-| `PlaceholderScreen` | Reservas / Favoritos / Mensajes | Sin estado. Muestra nombre del tab |
+| `EstadisticasScreen` | Tab "Estadísticas" | `activePeriod: string`. Conteos reales desde Supabase + métricas mock |
+| `PerfilScreen` | Tab "Perfil" (turista) | Sin estado. Link a política de privacidad con `Linking` |
+| `PerfilProveedorScreen` | Tab "Perfil" (proveedor) | Logout con Alert. Link política. Navega a `EliminarCuenta` |
+| `EliminarCuentaScreen` | Push desde PerfilProveedor | `confirmText`, `loading`. DELETE listings + signOut |
+| `PlaceholderScreen` | Genérica | Sin estado. Muestra nombre del tab |
 
 ### Componentes reutilizables
 
@@ -828,11 +844,18 @@ Estas funcionalidades están **fuera del alcance del MVP** pero son el siguiente
 - [ ] Mensajería en tiempo real (Supabase Realtime)
 - [ ] Estadísticas con datos reales de Supabase
 
-### Iteración 5 — Calidad y producción
+### Iteración 5 — Calidad y producción (en curso)
+- [x] Política de privacidad ISMO SOFT v2.0 — publicada en ismosoft.com.ar/privacidad/
+- [x] Ícono y splash screen definitivos (logo ISMO SOFT, fondo #1B2A4A)
+- [x] Privacy Manifest iOS (NSPrivacyAccessedAPITypes — requerido desde mayo 2024)
+- [x] Eliminación de cuenta in-app (Apple 5.1.1 + Google Play — obligatorio)
+- [x] Link a política de privacidad accesible desde la app
+- [x] Aviso de aceptación de política en pantalla de login
+- [ ] Completar App Privacy Details en App Store Connect (formulario separado)
+- [ ] Completar Data Safety form en Google Play Console (formulario separado)
+- [ ] Completar IARC (clasificación de edad) en Google Play Console
 - [ ] Publicar en Google Play Store (cuenta desarrollador USD 25)
 - [ ] Publicar en Apple App Store (Apple Developer Program USD 99/año)
-- [ ] Política de privacidad (obligatoria para stores)
-- [ ] Ícono y splash screen definitivos (1024x1024 PNG)
 - [ ] Tipado con TypeScript
 - [ ] Tests unitarios (Jest) y E2E (Detox)
 - [ ] Fuente custom Plus Jakarta Sans (expo-google-fonts)
@@ -858,6 +881,41 @@ Estas funcionalidades están **fuera del alcance del MVP** pero son el siguiente
 ---
 
 ## 17. Historial de cambios
+
+### v4.0 — Mar 2026 (cumplimiento Apple App Store + Google Play)
+
+#### Nuevos archivos
+| Archivo | Descripción |
+|---------|-------------|
+| `assets/icon.png` | Ícono de la app — logo ISMO SOFT (copiado desde `e:/Personal/Capacitaciones/Claude/Ansenuza/icono.png`) |
+| `assets/splash.png` | Splash screen — mismo logo centrado sobre fondo #1B2A4A |
+| `assets/adaptive-icon.png` | Ícono adaptativo Android |
+| `src/screens/EliminarCuentaScreen.js` | Pantalla de eliminación de cuenta in-app (obligatoria Apple 5.1.1 y Google Play desde dic 2023) |
+| `e:/Personal/Capacitaciones/Claude/Ansenuza/ISMO_SOFT_Politica_de_Privacidad_v2.md` | Política de privacidad ISMO SOFT v2.0 (documento fuente) |
+
+#### Archivos modificados
+| Archivo | Cambio |
+|---------|--------|
+| `app.json` | `icon`, `splash` (resizeMode contain, bg #1B2A4A), `android.adaptiveIcon`, `ios.privacyManifests` (NSPrivacyTracking false, UserDefaults CA92.1) |
+| `src/navigation/AppNavigator.js` | `EliminarCuentaScreen` registrado en `ProviderAreaStack` |
+| `src/screens/PerfilProveedorScreen.js` | Props `navigation`, items "Política de Privacidad" (Linking) y "Eliminar cuenta" (navigate) con estilos destructivos |
+| `src/screens/PerfilScreen.js` | Item "Política de Privacidad" con `Linking.openURL` |
+| `src/screens/LoginProveedorScreen.js` | Aviso "Al iniciar sesión aceptás nuestra Política de Privacidad" con link. Copyright `© 2026 ISMO SOFT` |
+
+#### Documentos externos actualizados
+| Documento | Cambio |
+|-----------|--------|
+| `ismosoft.com.ar/privacidad/` | Política de privacidad institucional ISMO SOFT v2.0 publicada y accesible |
+
+#### Pendiente de proceso (no código)
+| Acción | Plataforma |
+|--------|-----------|
+| Completar App Privacy Details | App Store Connect |
+| Completar Data Safety form | Google Play Console |
+| Completar IARC (clasificación de edad) | Google Play Console |
+| Subir capturas de pantalla y descripción | Ambas tiendas |
+
+---
 
 ### v3.1 — Feb 2026 (QA pass completo)
 
@@ -1014,6 +1072,46 @@ El mock proveedor es inconsistente: cada pantalla mostraba su propio set de 4 ta
 ### v1.0 — Feb 2026 (versión inicial MVP)
 - Proyecto completo generado desde los 7 mockups de Stitch
 - 23 archivos: 4 config · 1 theme · 1 data · 3 navigation · 10 screens · 4 components · 1 readme
+
+---
+
+---
+
+## 18. Cumplimiento de tiendas (App Store + Google Play)
+
+### Estado de cumplimiento — v4.0
+
+#### Código / configuración
+
+| Requisito | Apple (5.1) | Google Play | Archivo | Estado |
+|-----------|-------------|-------------|---------|--------|
+| Ícono de app | Requerido | Requerido | `assets/icon.png` + `app.json` | ✅ |
+| Splash screen | Requerido | Requerido | `assets/splash.png` + `app.json` | ✅ |
+| Adaptive icon Android | — | Requerido | `assets/adaptive-icon.png` + `app.json` | ✅ |
+| Privacy Manifest iOS | Requerido (mayo 2024) | — | `app.json ios.privacyManifests` | ✅ |
+| URL política en la app | Requerido | Requerido | `PerfilScreen`, `PerfilProveedorScreen`, `LoginProveedorScreen` | ✅ |
+| Aviso de aceptación en login | Requerido | Requerido | `LoginProveedorScreen` (texto + link) | ✅ |
+| Eliminación de cuenta in-app | Requerido (jun 2022) | Requerido (dic 2023) | `EliminarCuentaScreen` | ✅ |
+| Eliminación accesible sin la app | — | Requerido | Política: proceso por email `contacto@ismosoft.com.ar` | ✅ |
+| HTTPS en todas las llamadas | Requerido (ATS) | Requerido | Supabase + picsum.photos | ✅ |
+| Sin permisos innecesarios | Requerido | Requerido | No location, no camera, no contacts | ✅ |
+
+#### Proceso (fuera del código — pendiente antes del submit)
+
+| Acción | Plataforma | Dónde |
+|--------|-----------|-------|
+| Completar App Privacy Details (Nutrition Label) | Apple | App Store Connect → tu app → Privacy |
+| Completar Data Safety form | Google | Play Console → tu app → Data Safety |
+| Completar IARC (clasificación de edad) | Google | Play Console → tu app → Content rating |
+| Subir capturas de pantalla (mínimo 3) | Ambas | App Store Connect / Play Console |
+| Agregar descripción y palabras clave | Ambas | App Store Connect / Play Console |
+| Ingresar URL de política: `https://ismosoft.com.ar/privacidad/` | Ambas | Campo "Privacy Policy URL" en el listing |
+
+#### Política de privacidad
+- **Documento fuente:** `e:/Personal/Capacitaciones/Claude/Ansenuza/ISMO_SOFT_Politica_de_Privacidad_v2.md`
+- **URL publicada:** https://ismosoft.com.ar/privacidad/
+- **Versión:** 2.0 · Vigente desde 1 de marzo de 2026
+- **Cobertura:** sitio web institucional + todas las apps móviles de ISMO SOFT
 
 ---
 

@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -172,6 +173,17 @@ export default function LoginProveedorScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
+          {/* Aviso de política de privacidad */}
+          <Text style={styles.privacyNotice}>
+            Al iniciar sesión aceptás nuestra{' '}
+            <Text
+              style={styles.privacyLink}
+              onPress={() => Linking.openURL('https://ismosoft.com.ar/privacidad/')}
+            >
+              Política de Privacidad
+            </Text>
+          </Text>
+
           {/* Registro */}
           <View style={styles.registerRow}>
             <Text style={styles.registerText}>¿Aún no eres proveedor? </Text>
@@ -192,7 +204,7 @@ export default function LoginProveedorScreen({ navigation }) {
               <MaterialIcons name="public" size={24} color={colors.textMuted} />
               <MaterialIcons name="cloud-done" size={24} color={colors.textMuted} />
             </View>
-            <Text style={styles.copyright}>© 2024 Turismo Ansenuza. Todos los derechos reservados.</Text>
+            <Text style={styles.copyright}>© 2026 ISMO SOFT. Todos los derechos reservados.</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -303,6 +315,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   loginButtonText: { color: 'white', fontSize: 15, fontWeight: '700' },
+  privacyNotice: { fontSize: 11, color: colors.textMuted, textAlign: 'center', marginBottom: 20, lineHeight: 17 },
+  privacyLink: { color: colors.primary, fontWeight: '600', textDecorationLine: 'underline' },
   registerRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: 32 },
   registerText: { fontSize: 13, color: colors.textSecondary },
   registerLink: { fontSize: 13, fontWeight: '700', color: colors.primary },

@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -37,8 +38,9 @@ export default function PerfilScreen({ navigation }) {
           { icon: 'favorite-border', label: 'Favoritos' },
           { icon: 'notifications-none', label: 'Notificaciones' },
           { icon: 'help-outline', label: 'Ayuda y soporte' },
+          { icon: 'privacy-tip', label: 'Política de Privacidad', onPress: () => Linking.openURL('https://ismosoft.com.ar/privacidad/') },
         ].map((item) => (
-          <TouchableOpacity key={item.label} style={styles.menuItem}>
+          <TouchableOpacity key={item.label} style={styles.menuItem} onPress={item.onPress}>
             <MaterialIcons name={item.icon} size={22} color={colors.primary} />
             <Text style={styles.menuLabel}>{item.label}</Text>
             <MaterialIcons name="chevron-right" size={20} color={colors.textMuted} />
